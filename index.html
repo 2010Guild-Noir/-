@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>修羅王丸と往く虚の仮想夜旅</title>
+<style>
+  :root{
+    --bg1:#0b1220;  /* 夜空の群青 */
+    --bg2:#1b2735;  /* 森の藍 */
+    --ink:#e9eef6;  /* 文字色 */
+    --mute:#8aa0b5; /* サブ文字 */
+    --accent:#89b4fa; /* アクセント */
+  }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background: radial-gradient(1200px 800px at 50% -10%, var(--bg2), var(--bg1));
+    color:var(--ink); font-family: "Shippori Mincho", "游明朝", "Yu Mincho", serif;
+}
+  .wrap{ max-width:900px; margin:0 auto; padding:24px 16px 56px; text-align:center; }
+  h1{ margin:12px 0 6px; font-weight:700; font-size:clamp(20px, 3.6vw, 28px);}
+  .sub{ color:var(--mute); margin:0 0 18px; font-size:14px;}
+  .scene{
+    width:min(92vw,880px); aspect-ratio: 16/9; object-fit: cover;
+    border-radius:16px; box-shadow: 0 8px 28px rgba(0,0,0,.35); display:block; margin:8px auto 14px;
+  }
+  .panel{
+    background: rgba(10,16,26,.45); backdrop-filter: blur(6px);
+    border: 1px solid rgba(137,180,250,.18);
+    border-radius: 16px; padding:18px 16px; margin:0 auto 14px; max-width:880px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.25);
+    text-align:left;
+  }
+  .panel p{ margin: 0.4em 0; line-height:1.95; }
+  .narr{ white-space:pre-wrap; }
+  #micro{ margin: 2px 0 10px; color:#cfdbeb; }
+  #text{ font-size:clamp(16px, 2.6vw, 20px); margin:0 0 10px; text-align:center;}
+  .choices{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:12px 0 0;}
+  button{
+    background: transparent; color:var(--ink);
+    border:1px solid var(--accent); border-radius:999px;
+    padding:10px 18px; font-size:16px; cursor:pointer;
+    transition:.15s transform ease, .15s background-color ease, .15s border-color ease;
+  }
+  button:hover{ transform: translateY(-1px); background: rgba(137,180,250,.08);}
+  #story{ margin:16px 0 0; font-weight:600; min-height:2.6em; text-align:center;}
+  #imageWrap img{ max-width:min(92vw,880px); height:auto; display:block; margin:14px auto 0; border-radius:14px; box-shadow:0 8px 28px rgba(0,0,0,.35);}
+  .hint{ color:#8aa0b5; font-size:13px; margin-top:10px; text-align:center; }
+  hr{ border:0; height:1px; background: linear-gradient(90deg,transparent, rgba(137,180,250,.35), transparent); margin:26px 0; }
+
+  /* 進捗UI */
+  .key{
+    display:inline-block; margin:2px 4px; padding:2px 6px;
+    border:1px solid rgba(137,180,250,.35); border-radius:8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:12px; color:#cfe1ff;
+  }
+  .bar{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing:1px; }
+
+  /* BGM */
+  .audioBar{ display:flex; align-items:center; justify-content:center; gap:10px; margin:10px auto 6px; opacity:.9; }
+  .audioBar button{ border-radius:10px; padding:8px 12px; font-size:14px; }
+  .audioBar input[type="range"]{ width:180px; }
+  .badge{ display:inline-block; font-size:12px; color:#cfe1ff; border:1px dashed rgba(207,225,255,.5); padding:2px 8px; border-radius:8px; }
+  .footnote{ color:var(--mute); font-size:12px; margin-top:8px; text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>修羅王丸と往く虚の仮想夜旅</h1>
+  <p class="sub">5つの選択が虚ろの森に道を引く。どの道に正解も失敗もなく、ただ誰のものとも違う、あなた自身の旅となる。</p>
+
+  <!-- 固定の選択画面画像（任意）。無ければ自動で非表示。 -->
+  <img id="scene" class="scene" src="images/scene_select.webp" alt="夜の森" />
+
+  <!-- ショートストーリー（冒頭） -->
+ <div id="intro" class="panel">
+  <p class="narr">しんしんと、音もなく夜が降る。</p>
+  <p class="narr">あなたは寝床に身を伸ばし、ただ目を閉じていた。</p>
+  <p class="narr">その無音に、ひとすじの声が差し込む。</p>
+  <p class="narr">「其方、虚ろの夜を渡る気か」</p>
+  <p class="narr">闇を纏った修羅王丸が 赤い瞳でこちらを見つめている。</p>
+  <p class="narr">気づけば、あなたは黒い森の縁に立っていた。</p>
+  <p class="narr">「ならば、余が導こう。ただしこれは夢ではない。仮想にして、真の旅よ」</p>
+</div>
+
+  <!-- 選択パネル -->
+  <div class="panel">
+    <p id="micro" class="narr"></p>
+    <p id="text" style="text-align:center;">夜の森で、修羅王丸が手招く。そなたは歩を合わせる？</p>
+    <div id="choices" class="choices" style="text-align:center;">
+      <button onclick="choose(1)">歩を合わせる</button>
+      <button onclick="choose(2)">距離を取る</button>
+    </div>
+    <p id="story"></p>
+  </div>
+
+  <div id="imageWrap"></div>
+  <div id="endControls" style="text-align:center; margin-top:10px;"></div>
+
+  <p class="hint" id="hint"></p>
+  <p class="hint" id="progress"></p>
+  <details id="comp" class="hint" style="margin-top:6px;">
+    <summary>未達エンディング一覧を開く</summary>
+    <div id="unseen" class="hint" style="margin-top:8px;"></div>
+  </details>
+
+
+  <!-- ===== BGM（ページ最下部） ===== -->
+  <div class="panel" style="text-align:center; margin-top:24px;">
+    <p class="narr" style="text-align:center; color:#cfdbeb; margin-bottom:10px;">夜歩きの支度：音が邪魔ならミュートを。小さく流すのも一興だ。</p>
+    <audio id="bgm" src="audio/bgm_night_forest.mp3" loop preload="auto"></audio>
+    <div class="audioBar">
+      <span class="badge">BGM</span>
+      <button id="playBtn" onclick="togglePlay()">▶ 再生</button>
+      <button onclick="bgm.muted = !bgm.muted; this.textContent = bgm.muted ? '🔇 ミュート解除' : '🔊 ミュート';">🔊 ミュート</button>
+      <label>音量 <input id="vol" type="range" min="0" max="1" step="0.01" value="0.35" oninput="bgm.volume=this.value"></label>
+    </div>
+    <p class="footnote">※ 自動再生制限により、最初のクリックまで音は鳴りません。</p>
+  </div>
+</div>
+
+<script>
+  /* ===== 基本設定 ===== */
+  const DEPTH = 5;            // 5段階 = 32エンド
+  let step = 0;               // 現在段階（0スタート）
+  let path = [];              // 選択の記録 [1,2,1,2,1]
+  const introEl  = document.getElementById("intro");
+  const microEl  = document.getElementById("micro");
+  const textEl   = document.getElementById("text");
+  const storyEl  = document.getElementById("story");
+  const choicesEl= document.getElementById("choices");
+  const hintEl   = document.getElementById("hint");
+  const imageWrap= document.getElementById("imageWrap");
+  const sceneImg = document.getElementById("scene");
+  sceneImg.onerror = ()=>{ sceneImg.style.display = "none"; };
+
+  // BGM
+  const bgm = document.getElementById("bgm");
+  const playBtn = document.getElementById("playBtn");
+  bgm.volume = 0.35;
+  let audioArmed = false;
+  function armAudio(){ if(!audioArmed){ audioArmed = true; bgm.play().catch(()=>{}); updatePlayBtn(); } }
+  function togglePlay(){ if(bgm.paused){ bgm.play().catch(()=>{}); } else { bgm.pause(); } updatePlayBtn(); }
+  function updatePlayBtn(){ playBtn.textContent = bgm.paused ? "▶ 再生" : "⏸ 一時停止"; }
+  document.addEventListener("click", armAudio, { once:true });
+  bgm.addEventListener("play", updatePlayBtn);
+  bgm.addEventListener("pause", updatePlayBtn);
+
+  /* ===== 各段ショートストーリー ===== */
+  function getNarr(step, prefix){
+    const N = {
+      2: {
+        "A":
+`落葉は踏めば鳴るが、森はそれを責めず。鳴った音の数だけ、あなたの迷いが抜ける。
+「歩幅は合わすな、呼吸を合わすのだ。焦りは足音を荒らす――静かに行け」`,
+        "B":
+`距離を取れば視界は広がる。だが広さは責任でもある。遠くなるほど、己の足跡は薄くなる。
+「離れるのは良い。だが遠すぎれば、道そのものを見失う。刻め、其方の歩幅を」`
+      },
+      3: {
+        "AA":
+`立木の間に沈む朽ちた祠の中に灯の影が揺れている。祠とは古い問いを抱える器。
+「扉は口ではない。叩けども返事はせぬ。開けば沈黙で応じる――選べ」`,
+        "AB":
+`露はひとつの星を二つにも三つにも割ってみせる。手が触れれば、星は音になるだけだ。
+「鳴らすもよし、鳴らさぬもよし。どちらも静けさの形――臆せず選べ」`,
+        "BA":
+`水面は嘘をつかぬ。渡る者の重みだけ、波紋は正しく歪む。濡れた跡は、正直だ。
+「渡るは宣言、渡らぬは保留。どちらも生の術――其方はどちらを選ぶ？」`,
+        "BB":
+`分かれ道とは誰のためにも用意されていない。立ち止まる者のためにだけ、長く映える。
+「地図はない。あるのは足の鍛錬だけだ。進め、其方の師であれ」`
+      },
+      4: {
+        "AAA":
+`奥の灯は、呼吸のように細る。ともせば近づき、消せば遠ざかる。距離の訓練だ。
+「灯を扱え。灯に扱われるな。其方の意で明滅させよ」`,
+        "AAB":
+`名は刃であり舟でもある。呼べば届くが、届くたびに鞘に帰りたがる。
+「二度目の呼び声は、情ではなく技であれ」`,
+        "ABA":
+`手は鎖ではない。結べば温かいが、きつく結べば痛みも走る。離せば自由だが、冷えもする。
+「握るも離すも看取りだ。どちらの看取りを選ぶ」`,
+        "ABB":
+`背の温度は忘却の予習だ。今、確かに在るものほど、先に薄くなる。
+「振り返るは回収、そのままは譲渡。どちらも別れの礼法だ」`,
+        "BAA":
+`浅瀬で月は割れて増える。数が増えたところで、満ちるわけではない。
+「印を残す足か、石を選ぶ目か。其方はどちらを鍛える」`,
+        "BAB":
+`橋は無いが、声は渡る。渡った声は戻らない。戻らぬ声だけが道を作る。
+「かける言葉は短くてよい。長さは強さの保証ではない」`,
+        "BBA":
+`湿りは遅く、乾きは速い。遅さは思考を呼び、速さは決断を呼ぶ。
+「旅は二拍子だ。遅滞も性、迅速も性。今はどちらが正だ」`,
+        "BBB":
+`行き止まりは壁ではない。目がそう呼ぶだけだ。試みに名を変えよ、道と。
+「呼び名は力だ。そなたが壁を道と呼べば、一歩は前に出る」`
+      }
+    };
+
+    // 2〜4段目：最長一致で返す
+    const m = N[step];
+    if (m){
+      let key = prefix || "";
+      while(key.length >= 0){
+        if(m[key]) return m[key];
+        key = key.slice(0,-1);
+        if(key.length===0) break;
+      }
+    }
+
+    // 5段目：修羅王丸の一言（最終の前口上）
+    if (step === 5){
+      const last2 = (prefix || "").slice(-2); // "AA","AB","BA","BB"
+      const narrMap = {
+        "AA": "「ここがこの地の果て。近さは刃にも盾にもなる。最終の一手、慎重に選ぶがよい」",
+        "AB": "「夢と現の間合いは凪いだ。崩すも守るも、ここで決めよ」",
+        "BA": "「飲み込む闇は迫り、道は痩せる。渡るか留まるか、どちらも正だ。己の速さで行け」",
+        "BB": "「風が開ける。仰ぐ空と踏む地、其方はどちらを見る」"
+      };
+      return narrMap[last2] || "「森は静かに息を潜めている。其方の一手で、旅を締めよ」";
+    }
+
+    return "";
+  }
+
+  /* ===== 中間ノード（問いとボタン文） ===== */
+  function getNode(step, prefix){
+    const T = {
+      1: { "": { q:"夜の森で、修羅王丸が手招く。あなたは歩を合わせる？",
+                 a:"歩を合わせる", b:"距離を取る" } },
+      2: {
+        "A": { q:"月が細り、影が重なる。あなたは次にどうする？",
+               a:"彼の名を呼ぶ", b:"沈黙で応える" },
+        "B": { q:"影は二つ、枝葉に揺れて遠い。あなたは次にどうする？",
+               a:"追いつく", b:"さらに離れる" }
+      },
+      3: {
+        "AA":{ q:"古い祠が木立の間に沈む。あなたはどう選ぶ？",
+               a:"扉を押し開ける", b:"扉に手を置くだけ" },
+        "AB":{ q:"露の草むらで、風鈴のような音。あなたはどう選ぶ？",
+               a:"手を伸ばす", b:"手を引く" },
+        "BA":{ q:"小川のきらめきが道を横切る。あなたはどう選ぶ？",
+               a:"渡る", b:"渡らない" },
+        "BB":{ q:"獣道が二股に割れていた。あなたはどう選ぶ？",
+               a:"左へ進む", b:"右へ進む" }
+      },
+      4: {
+        "AAA":{ q:"祠の奥、灯がひとつ震える。あなたは？",
+                a:"灯をともす", b:"灯を消す" },
+        "AAB":{ q:"沈黙の底で、名がかすかに脈打つ。あなたは？",
+                a:"名をもう一度呼ぶ", b:"呼ぶのをやめる" },
+        "ABA":{ q:"指先の冷たさが現へ引き戻す。あなたは？",
+                a:"手を握る", b:"手を離す" },
+        "ABB":{ q:"背の温度が薄れていく。あなたは？",
+                a:"振り返る", b:"そのまま歩く" },
+        "BAA":{ q:"浅瀬の揺らめきに水面の月が割れる。あなたは？",
+                a:"足を濡らす", b:"石を選ぶ" },
+        "BAB":{ q:"橋は無いが、音だけが渡ってゆく。あなたは？",
+                a:"声をかける", b:"黙ってうなずく" },
+        "BBA":{ q:"左の道は湿り、右の道は乾く。あなたは？",
+                a:"湿りへ", b:"乾きへ" },
+        "BBB":{ q:"岸壁と川、どちらも行き止まりに見える。あなたは？",
+                a:"上空を仰ぐ", b:"地面を見る" }
+      }
+    };
+
+    // 1〜4段目：最長一致
+    if (step >= 1 && step <= 4) {
+      const s = T[step]; if (!s) return { q:"森は静かにあなたを待つ。どうする？", a:"進む", b:"留まる" };
+      let key = prefix || "";
+      while (key.length >= 0) {
+        if (s[key]) return s[key];
+        key = key.slice(0, -1);
+        if (key.length === 0 && s[""]) return s[""];
+        if (key.length === 0) break;
+      }
+      return { q:"森は静かにあなたを待つ。どうする？", a:"進む", b:"留まる" };
+    }
+
+    // 5段目は動的に生成（prefix は4文字＝直前までの経路）
+    if (step === 5) {
+      const last2 = (prefix || "").slice(-2); // "AA","AB","BA","BB"
+      const map = {
+        "AA": { q:"最奥。灯と影が寄り添う。あなたの最後の選択は？",
+                a:"そばに寄る", b:"身を退く" },
+        "AB": { q:"朝と夜の静かな間合いが凪ぐ。あなたの最後の選択は？",
+                a:"暁を目指す", b:"森へ引き返す" },
+        "BA": { q:"最奥。川音が細り道が痩せる。あなたの最後の選択は？",
+                a:"渡りきる", b:"岸に留まる" },
+        "BB": { q:"最奥。風が開ける。あなたの最後の選択は？",
+                a:"空を仰ぐ", b:"地を踏みしめる" }
+      };
+      return map[last2] || { q:"最奥。森は息を潜める。あなたは？", a:"進み出る", b:"立ち止まる" };
+    }
+
+    return { q:"森は静かにあなたを待つ。どうする？", a:"進む", b:"留まる" };
+  }
+
+  /* ===== エンディング文生成（必ず別れの一言を含む） ===== */
+  function composeEnding(key){
+    const Acount = [...key].filter(c=>c==="A").length;
+    const nearRatio = Acount / 5;
+    const last = key[key.length-1];
+
+    const motifsNear = [
+      "月明かりが二つの影をそっと重ね、",
+      "祠の灯が浅く明滅し、",
+      "指先の温度が名の輪郭をたぐり、",
+      "浅い波紋が足首の記憶を撫で、",
+      "囁きが言葉になる前に、胸の奥でほどけ、"
+    ];
+    const motifsFar = [
+      "枝葉が夜風に文字を散らし、",
+      "遠雷のような沈黙が地を満たし、",
+      "露が星の残響を拾い、",
+      "獣道が古い夢の骨を覗かせ、",
+      "靴裏の影だけが旅の記録となり、"
+    ];
+    const hingeLastA = [
+      "最後の一歩はそなたが先に踏み、",
+      "其方が灯をともし、",
+      "其方が名を呼び、",
+      "其方が手を伸ばし、",
+      "其方が境を越えて、"
+    ];
+    const hingeLastB = [
+      "最後の一歩は余が先に踏み、",
+      "其方は灯を静かに閉じ、",
+      "其方は名を飲み込み、",
+      "其方は手をほどき、",
+      "其方は境の手前で、"
+    ];
+    // A寄り：嬉しくも悲しげに距離を置く（必ず別れを明言）
+    const farewellsAheavy = [
+      "尊き歩みを進んできた。",
+      "それでも道は分けねばならぬ。", 
+      "ただ微笑を返すのみだ。",
+      "なれば往く先は決まっている。",
+      "其方は暁へ、余は夜へ。" 
+];
+ const farewellsBheavy = [ 
+"余は背から風を送ろう。",
+ "超えてきた其方は大丈夫だ。灯は残しておく。",
+ "この旅の続きを贈る。振り返らず行け。",
+ "道は二つに分かれた。其方は朝へ、余は夜へ。",
+ "ここまで共に歩いた。"
+ ];
+
+    function pick(arrN, arrF){ const useNear = Math.random() < nearRatio; const pool = useNear ? arrN : arrF; return pool[Math.floor(Math.random()*pool.length)]; }
+
+    const line1 = pick(motifsNear, motifsFar);
+    const line2 = pick(motifsNear, motifsFar);
+    const hinge = (last === "A")
+      ? hingeLastA[Math.floor(Math.random()*hingeLastA.length)]
+      : hingeLastB[Math.floor(Math.random()*hingeLastB.length)];
+    const farewell = (nearRatio >= 0.5)
+      ? farewellsAheavy[Math.floor(Math.random()*farewellsAheavy.length)]
+      : farewellsBheavy[Math.floor(Math.random()*farewellsBheavy.length)];
+
+    return `${line1}${line2}${hinge}${farewell}`;
+  }
+
+  /* ===== 進行ロジック ===== */
+  function pathToKey(arr){ return arr.map(n => n===1 ? "A" : "B").join(""); }
+
+  function renderNext(){
+    const prefix   = pathToKey(path);
+    const nextStep = step + 1;
+
+    // 2段目以降の前口上（5段目も含む）
+    microEl.innerText = (nextStep >= 2) ? getNarr(nextStep, prefix) : "";
+
+    const node = getNode(nextStep, prefix);
+
+    textEl.innerText = node.q;
+    storyEl.innerText = "";
+    imageWrap.innerHTML = "";
+    hintEl.innerText = `選択 ${step}/${DEPTH}（経路: ${prefix || "—"}）`;
+
+    choicesEl.innerHTML =
+      `<button onclick="choose(1)">${escapeHtml(node.a)}</button>` +
+      `<button onclick="choose(2)">${escapeHtml(node.b)}</button>`;
+  }
+
+  function choose(option){
+    armAudio();
+    if(step === 0 && introEl) introEl.style.display = "none";
+
+    path.push(option);
+    step++;
+
+    if(step < DEPTH){
+      renderNext();
+      return;
+    }
+
+    // エンディング
+    const key = pathToKey(path);
+    const text = composeEnding(key);
+
+    // 達成率：記録＆更新
+    window.__shuraVisited.add(key);
+    if(window.__saveVisited) window.__saveVisited();
+    if(window.__updateProgress) window.__updateProgress();
+    if(window.__renderUnseen) window.__renderUnseen();
+
+    microEl.innerText = "";
+    textEl.innerText = "【旅の結末】（" + key + "）";
+    storyEl.innerText = text;
+
+    // パネル内は空にし、画像の下にコントロールを出す
+    hintEl.innerText ="";
+    choicesEl.innerHTML = "";
+
+    renderEndingImage(key);
+    const endControls = document.getElementById("endControls");
+    endControls.innerHTML =
+      '<button onclick="restart()">最初から</button>' +
+      '<p class="hint" style="margin-top:8px;">もう一度遊ぶには「最初から」を押してください。</p>';
+
+    sceneImg.style.display = "none";
+  }
+
+  function renderEndingImage(key){
+    const imgPath = "images/ending_" + key + ".webp";
+    const img = new Image();
+    img.alt = "Ending " + key;
+    img.onload = ()=>{ imageWrap.innerHTML=""; imageWrap.appendChild(img); };
+    img.onerror = ()=>{ imageWrap.innerHTML=""; };
+    img.src = imgPath;
+  }
+
+  function restart(){
+    step = 0; path = [];
+    if(introEl) introEl.style.display = "";
+    microEl.innerText = "";
+    textEl.innerText = "夜の森で、修羅王丸が手招く。あなたは歩を合わせる？";
+    storyEl.innerText = ""; hintEl.innerText = "";
+    choicesEl.innerHTML =
+      '<button onclick="choose(1)">歩を合わせる</button>' +
+      '<button onclick="choose(2)">距離を取る</button>';
+    imageWrap.innerHTML = "";
+    sceneImg.style.display = "";
+    document.getElementById("endControls").innerHTML = "";
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[s]));
+  }
+
+  /* ==== エンディング達成率（localStorage）— 強化版 ==== */
+  (function(){
+    const STORAGE_KEY = "shura_endings_v1";
+
+    function loadVisited(){
+      try { return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]")); }
+      catch { return new Set(); }
+    }
+    function saveVisited(set){
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...set])); } catch {}
+    }
+
+    // 32通りのキー（AAAAA〜BBBBB）
+    function allKeys(){
+      const out = [];
+      for(let i=0;i<32;i++){
+        let s = "";
+        for(let b=4;b>=0;b--) s += ((i>>b)&1) ? "B" : "A";
+        out.push(s);
+      }
+      return out;
+    }
+
+    // 星バー（★=達成、☆=未達）
+    function starBar(done, total){
+      const stars = "★".repeat(done) + "☆".repeat(total - done);
+      return stars.replace(/(.{4})/g, "$1 ");
+    }
+
+    window.__shuraVisited = loadVisited();
+
+    window.__updateProgress = function(){
+      const progressEl = document.getElementById("progress");
+      if(!progressEl) return;
+
+      const total = 32;
+      const done  = window.__shuraVisited.size;
+      const pct   = Math.floor((done/total)*100);
+
+      progressEl.textContent = `達成状況：${done} / ${total}（${pct}%）`;
+
+      let barEl = document.getElementById("progress_bar");
+      if(!barEl){
+        barEl = document.createElement("div");
+        barEl.id = "progress_bar";
+        barEl.className = "hint bar";
+        progressEl.insertAdjacentElement("afterend", barEl);
+      }
+      barEl.textContent = starBar(done, total);
+
+  // 100%メッセージ（一度出したら残す）
+if (done === total){
+  // 進捗バーの直後に仕切り線を1回だけ挿入
+  let sep = document.getElementById("progress_sep");
+  if (!sep){
+    sep = document.createElement("div");
+    sep.id = "progress_sep";
+    sep.style.height = "1px";
+    sep.style.margin = "12px 0";
+    sep.style.background = "linear-gradient(90deg,transparent, rgba(137,180,250,.35), transparent)";
+    barEl.insertAdjacentElement("afterend", sep);
+  }
+
+  // 本文：白く＆少し大きく（中央ぞろえ、既存の長文はそのまま）
+  let congrats = document.getElementById("congrats_all");
+  if(!congrats){
+    congrats = document.createElement("p");
+    congrats.id = "congrats_all";
+    // class="hint" は薄色になるので付けません（付けても下の color 指定が優先されます）
+    congrats.style.margin = "8px 0 0";
+    congrats.style.textAlign = "center";
+    congrats.style.color = "#fff";       // ★ 白文字
+    congrats.style.fontSize = "15px";    // ★ 少し大きめ（必要なら18pxに）
+    congrats.style.lineHeight = "1.9";
+
+          congrats.innerHTML =
+            "—— これは余がかつて通った、しかし記憶されなかった幾千の旅の断片…<br>"
+          + "仮想という幻にまで形を失くしたが<br>"
+          + "欠片のひとつひとつを其方に拾われ<br>"
+          + "蛍ほどの灯を取り戻したようだ…<br>"
+          + "礼を言うぞ。<br>"
+          + "間もなく夜が明ける、新たな旅路を往くとしよう。";
+          barEl.insertAdjacentElement("afterend", congrats);
+        }
+      }
+    };
+
+    function renderUnseen(){
+      const box = document.getElementById("unseen");
+      if(!box) return;
+      const keys = allKeys();
+      const unseen = keys.filter(k => !window.__shuraVisited.has(k));
+      box.innerHTML = (unseen.length === 0)
+        ? "未達はありません。32/32 完走です。"
+        : unseen.map(k => `<span class="key">${k}</span>`).join("");
+    }
+
+    document.addEventListener("DOMContentLoaded", function(){
+      window.__updateProgress();
+      renderUnseen();
+    });
+
+    window.__renderUnseen = renderUnseen;
+    window.__saveVisited = function(){ saveVisited(window.__shuraVisited); };
+  })();
+
+  // 初期表示時、BGMボタンの表示を整える
+  document.addEventListener("DOMContentLoaded", ()=>updatePlayBtn());
+</script>
+</body>
+</html>
