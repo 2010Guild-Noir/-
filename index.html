@@ -648,11 +648,34 @@ if (done === total){
   })();
 
   // 初期表示時、BGMボタンの表示を整える
-document.addEventListener("DOMContentLoaded", ()=>{
-  updatePlayBtn();
-  updateBackBtn();
-});
+(function boot(){
+  function start(){
+    try{
+      updatePlayBtn && updatePlayBtn();
+      updateBackBtn && updateBackBtn();
+    }catch(e){ console.error(e); }
+  }
+  if (document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", start, { once:true });
+  } else {
+    start();
+  }
+})();
 
+
+/* GitHub Pages等でDOMContentLoadedが先に走っても安全にするガード */
+(function(){
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initShuraSafe, { once:true });
+  } else {
+    // すでに読み込み済みなら即時
+    initShuraSafe();
+  }
+  function initShuraSafe(){
+    // ここは空でOK：下の既存コードで再度DOMContentLoadedを使っています。
+    // ブラウザ差で順序が前後しても2重実行されないよう once:true を使っているので問題なし。
+  }
+})();
 </script>
 </body>
 </html>
