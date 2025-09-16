@@ -356,17 +356,15 @@
 
   /* ===== エンディング文生成（固定ロジック・5分岐拡張） ===== */
 function composeEnding(key){
-  const Acount = [...key].filter(c => c === "A").length;     // Aの数（0..5）
-  const last   = key[key.length - 1];                        // 最後の手 A/B
-  const first2 = key.slice(0,2);                             // 冒頭傾向
-  const last2  = key.slice(-2);                              // 終盤傾向
+  const Acount = [...key].filter(c => c === "A").length;
+  const last   = key[key.length - 1];
+  const first2 = key.slice(0,2);
+  const last2  = key.slice(-2);
 
-  // 経路キーを 0..31 の整数に（A=0, B=1 の2進数）
-  const pathNum = parseInt(key.replace(/A/g, '0').replace(/B/g, '1'), 2);
-  const pick5 = n => ((n % 5) + 5) % 5;                      // 安全な mod 5
-  const idx = pick5(pathNum);
+  // 経路から 0..31 を算出 → mod 5 で本文締めを分岐（決定的）
+  const pathNum = parseInt(key.replace(/A/g,'0').replace(/B/g,'1'), 2);
+  const idx = ((pathNum % 5) + 5) % 5;
 
-  // 冒頭情景（前半2手で決定）
   const motif1 = ({
     "AA": "月明かりが二人の影を静かに落とし、",
     "AB": "露が風に震え、草むらの鈴が遠くで鳴り、",
@@ -396,36 +394,17 @@ function composeEnding(key){
     "この先は名残は残るが、道は別だ。"
   ];
   const farewellB = [
-    "よく歩いたな。",
-    "ここからは其方の道だ。",
-    "旅の続きを贈ろう。",
-    "先の道は二つに分かれた。",
-    "ここまで共に歩いた。"
-  ];
+    "別れは門出だ。余が背から風を送ろう。。",
+    "ここからは其方の道だ。灯は残しておく。",
+    "旅の続きを贈ろう。振り返らず進め。",
+    "風向きは良い。肩の力を抜け。歩は軽くてよい",
+    "ここから先は其方の独壇場だ。振り返らず進め。"
+    ];
   const isAheavy = (Acount >= 3);
   const farewellBody = (isAheavy ? farewellA : farewellB)[idx];
 
-  // 修羅王丸の最後の一言（A多/B多 それぞれ5種）
-  const shuraA = [
-    "「名残は置いてゆけ。其方は暁へ、余は夜へ」",
-    "「距離は力にも刃にもなる。ここでしばしの別れよ」",
-    "「拾った灯を胸に仕舞え。余は遠くから見届ける」",
-    "「これ以上は近づかぬ。尊き歩を損ねぬためだ」",
-    "「別れは弱さではない。強さゆえの距離だ。行け」"
-  ];
-  const shuraB = [
-    "「振り返らず行け。灯は残しておく。いつでも自らともせ」",
-    "「風向きは良い。肩の力を抜け。歩は軽くてよい」",
-    "「ここから先は其方の独壇場だ。振り返らず進め。」",
-    "「別れは門出だ。余が背から風を送ろう。」",
-    "「道が痩せたら空を見よ。広さはいつも頭上にある」"
-  ];
-  const shuraLast = (isAheavy ? shuraA : shuraB)[idx];
-
-  return `${motif1}${motif2}${hinge}${farewellBody}${shuraLast}`;
-}
-
-
+  // ★ 最後の一言（shuraLast）は付けずに返す
+  return `${motif1}${motif2}${hinge}${farewellBody}`;
   /* ===== 進行ロジック ===== */
   function pathToKey(arr){ return arr.map(n => n===1 ? "A" : "B").join(""); }
 
@@ -672,4 +651,5 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
 
