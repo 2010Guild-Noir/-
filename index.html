@@ -354,17 +354,20 @@
     return { q:"森は静かにあなたを待つ。どうする？", a:"進む", b:"留まる" };
   }
 
-  /* ===== エンディング文生成（固定ロジック・5分岐拡張） ===== */
+
+/* ===== エンディング文生成 ===== */
 function composeEnding(key){
-  const Acount = [...key].filter(c => c === "A").length;
-  const last   = key[key.length - 1];
-  const first2 = key.slice(0,2);
-  const last2  = key.slice(-2);
+  const Acount = [...key].filter(c => c === "A").length;     // Aの数（0..5）
+  const last   = key[key.length - 1];                        // 最後の手 A/B
+  const first2 = key.slice(0,2);                             // 冒頭傾向
+  const last2  = key.slice(-2);                              // 終盤傾向
 
-  // 経路から 0..31 を算出 → mod 5 で本文締めを分岐（決定的）
-  const pathNum = parseInt(key.replace(/A/g,'0').replace(/B/g,'1'), 2);
-  const idx = ((pathNum % 5) + 5) % 5;
+  // 経路キーを 0..31 の整数に（A=0, B=1 の2進数）
+  const pathNum = parseInt(key.replace(/A/g, '0').replace(/B/g, '1'), 2);
+  const pick5 = n => ((n % 5) + 5) % 5;                      // 安全な mod 5
+  const idx = pick5(pathNum);
 
+  // 冒頭情景（前半2手で決定）
   const motif1 = ({
     "AA": "月明かりが二人の影を静かに落とし、",
     "AB": "露が風に震え、草むらの鈴が遠くで鳴り、",
@@ -388,23 +391,25 @@ function composeEnding(key){
   // 本文締め（A多/B多 それぞれ5種）
   const farewellA = [
     "だからこそ其方の歩みは尊い。",
-    "その想いは受け取った。。",
-    "この先は其方は其方の速さで行け。",
+    "その想いは受け取った。",
+    "この先は、其方は其方の速さで行け。",
     "その選択を余は嬉しく思う。",
     "この先は名残は残るが、道は別だ。"
   ];
   const farewellB = [
-    "別れは門出だ。余が背から風を送ろう。。",
-    "ここからは其方の道だ。灯は残しておく。",
-    "旅の続きを贈ろう。振り返らず進め。",
-    "風向きは良い。肩の力を抜け。歩は軽くてよい",
-    "ここから先は其方の独壇場だ。振り返らず進め。"
-    ];
+    "よく歩いたな。",
+    "ここからは其方の道だ。",
+    "旅の続きを贈ろう。",
+    "先の道は二つに分かれた。",
+    "振り返らず進め。"
+  ];
   const isAheavy = (Acount >= 3);
   const farewellBody = (isAheavy ? farewellA : farewellB)[idx];
 
-  // ★ 最後の一言（shuraLast）は付けずに返す
+  // ★ 修羅王丸の最後の一言は削除（ここがなくなっています）
   return `${motif1}${motif2}${hinge}${farewellBody}`;
+}
+
   /* ===== 進行ロジック ===== */
   function pathToKey(arr){ return arr.map(n => n===1 ? "A" : "B").join(""); }
 
@@ -651,5 +656,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
-
 
