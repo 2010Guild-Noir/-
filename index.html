@@ -91,6 +91,26 @@
   .audioBar input[type="range"]{ width:180px; }
   .badge{ display:inline-block; font-size:12px; color:#cfe1ff; border:1px dashed rgba(207,225,255,.5); padding:2px 8px; border-radius:8px; }
   .footnote{ color:var(--mute); font-size:12px; margin-top:8px; text-align:center;}
+
+/* 右下の「戻る」ボタン */
+#backBtn{
+  position: fixed;
+  right: 12px; bottom: 12px;
+  font-size: 12px; line-height: 1;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(137,180,250,.35);
+  background: rgba(10,16,26,.45);
+  color: #cfe1ff;
+  opacity: .55;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+  cursor: pointer;
+  z-index: 50;
+}
+#backBtn:hover{ opacity: .85; transform: translateY(-1px); }
+#backBtn:disabled{ opacity: .25; cursor: default; transform:none; }
+
 </style>
 </head>
 <body>
@@ -147,7 +167,9 @@
     <p class="footnote">※ 自動再生制限により、最初のクリックまで音は鳴りません。</p>
   </div>
 </div>
-
+<!-- ▼ ここに戻るボタンを追加 ▼ -->
+  <button id="backBtn" onclick="goBack()" title="一手戻る">← 戻る</button>
+  <!-- ▲ 追加ここまで ▲ -->
 <script>
   /* ===== 基本設定 ===== */
   const DEPTH = 5;            // 5段階 = 32エンド
@@ -424,7 +446,10 @@ function composeEnding(key){
     choicesEl.innerHTML =
       `<button onclick="choose(1)">${escapeHtml(node.a)}</button>` +
       `<button onclick="choose(2)">${escapeHtml(node.b)}</button>`;
-  }
+  // ▼ ここを追加
+  updateBackBtn();
+  // ▲ ここまで
+}
 
   function choose(option){
     armAudio();
@@ -463,6 +488,9 @@ function composeEnding(key){
       '<p class="hint" style="margin-top:8px;">もう一度遊ぶには「最初から」を押してください。</p>';
 
     sceneImg.style.display = "none";
+// ▼ ここを追加（エンディング時は戻るボタンを隠す）
+    updateBackBtn();
+    // ▲ ここまで
   }
 
   function renderEndingImage(key){
@@ -486,7 +514,45 @@ function composeEnding(key){
     imageWrap.innerHTML = "";
     sceneImg.style.display = "";
     document.getElementById("endControls").innerHTML = "";
+// ▼ ここを追加
+  updateBackBtn();
+  // ▲ ここまで
   }
+
+/* ── 戻るボタンの制御（ここから追加） ── */
+function updateBackBtn(){
+  const btn = document.getElementById("backBtn");
+  if(!btn) return;
+  const atEnding = (step >= DEPTH);
+  btn.style.display = (step === 0 || atEnding) ? "none" : "block";
+  btn.disabled = (step === 0);
+}
+
+function goBack(){
+  // エンディングからの「戻る」：最終手前に戻す
+  if (step >= DEPTH){
+    path.pop();              // 最後の選択を取り消し
+    step = DEPTH - 1;        // 4段目へ
+    const endControls = document.getElementById("endControls");
+    if(endControls) endControls.innerHTML = "";
+    imageWrap.innerHTML = "";
+    sceneImg.style.display = "";   // 固定画像を（あれば）再表示
+    renderNext();
+    updateBackBtn();
+    return;
+  }
+
+  // 通常の「戻る」：一手戻す
+  if (step > 0){
+    path.pop();
+    step--;
+    if(step === 0 && introEl) introEl.style.display = ""; // 導入文を戻す
+    sceneImg.style.display = ""; // シーン画像（あれば）を戻す
+    renderNext();
+    updateBackBtn();
+  }
+}
+/* ── 戻るボタンの制御（ここまで追加） ── */
 
   function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, s=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[s]));
@@ -598,9 +664,12 @@ if (done === total){
   })();
 
   // 初期表示時、BGMボタンの表示を整える
-  document.addEventListener("DOMContentLoaded", ()=>updatePlayBtn());
+document.addEventListener("DOMContentLoaded", ()=>{
+  updatePlayBtn();
+  updateBackBtn();
+});
+
 </script>
 </body>
 </html>
-
 
